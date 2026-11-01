@@ -11,7 +11,7 @@ area = width_control.value * 4
 main! = |_args| {
     expect width_control.value == 3
     expect area == 12
-    echo!(Str.inspect(width_control.display))
-    echo!(Str.inspect(Display.text("Area: ${area.to_str()}")))
+    echo!("${Str.inspect(width_control.display)}\n")
+    echo!("${Str.inspect(Display.text("Area: ${area.to_str()}"))}\n")
     Ok({})
 }

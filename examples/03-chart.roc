@@ -7,6 +7,6 @@ figure =
 
 main! = |_args| {
     chart = Display.plotly("Fruit counts: 3 apples and 2 pears.", figure)
-    echo!(Str.inspect(chart))
+    echo!("${Str.inspect(chart)}\n")
     Ok({})
 }

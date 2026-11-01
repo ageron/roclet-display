@@ -5,7 +5,7 @@ import roclet.Display
 main! = |_args| {
     greeting = Display.markdown("# Hello from Roc\nA small report with a table.")
     table = Display.table(["Item", "Count"], [["Apples", "3"], ["Pears", "2"]])
-    echo!(Str.inspect(greeting))
-    echo!(Str.inspect(table))
+    echo!("${Str.inspect(greeting)}\n")
+    echo!("${Str.inspect(table)}\n")
     Ok({})
 }
