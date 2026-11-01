@@ -1,4 +1,4 @@
-app [main!] { roclet: "../package/main.roc" }
+app [main!] { roclet: "https://github.com/ageron/roclet-display/releases/download/0.4.0/Gv78dUSQfYRU2yvV9HuS5oHYdMfik84S4sgsej6mbjLd.tar.zst" }
 import roclet.Display
 
 # Plotly JSON needs data and layout. No Plume dependency is needed for this example.

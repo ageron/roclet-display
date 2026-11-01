@@ -4,7 +4,7 @@
 rich output in Roclet and readable text when printed by ordinary Roc.
 
 ```roc
-app [main!] { roclet: "https://github.com/ageron/roclet/releases/download/0.2.0/C8vdeSE1ABoSei4Lepuy9Dy7t7GAJQt42WQkWw9bhcFc.tar.zst" }
+app [main!] { roclet: "https://github.com/ageron/roclet-display/releases/download/0.4.0/Gv78dUSQfYRU2yvV9HuS5oHYdMfik84S4sgsej6mbjLd.tar.zst" }
 
 import roclet.Display
 
@@ -17,7 +17,7 @@ main! = |_args| {
 
 Roc fetches and caches the package on first use. Roclet embeds the matching
 implementation, so browser and native notebook execution work offline.
-Version `0.2.0` includes HTML, SVG, sliders, and custom reactive widgets.
+Version `0.4.0` includes HTML, SVG, sliders, custom reactive widgets, and Plotly charts.
 
 ## New markup constructors
 
@@ -38,10 +38,7 @@ out_chart = Display.plotly("A description of the curve", chart.to_json())
 ```
 
 See the complete [Plume notebook](https://github.com/ageron/roclet/blob/main/demos/04-plume-charts.roc) for imports,
-the pinned dependency, and a reactive frequency slider. This constructor is
-available in the source and embedded Roclet package; the published `0.2.0`
-archive predates it. Ordinary Roc consumers need the local package until the
-next Display release.
+the pinned dependency, and a reactive frequency slider. This constructor is available in the published `0.4.0` package.
 
 Figures must be JSON objects with a `data` array of trace objects and a `layout`
 object. JSON is limited to 128 KiB; oversized figures return a text explanation,
@@ -131,8 +128,7 @@ is required. Use `--roc /path/to/roc` to select another compiler.
 
 New releases use `https://github.com/ageron/roclet-display/releases/download/VERSION/HASH.tar.zst`.
 The older releases in `ageron/roclet` remain valid and must not be deleted.
-The usage example above retains the last published pin until the first release
-from this repository is available. Do not use mutable `latest` links in Roc apps.
+The usage example and runnable examples use the release recorded in `package-url.txt`. Do not use mutable `latest` links in Roc apps.
 
 ## Updating Roclet
 
@@ -151,3 +147,20 @@ Review and commit the source and URL updates together. Roclet CI rebuilds the
 embedded engines and tests its notebook integrations. Release the Roclet server
 from that verified commit afterward. This repository does not need permission
 to open PRs or push changes into Roclet.
+
+## Automatic release update PRs
+
+After publication, the release workflow opens a PR updating `package-url.txt`,
+all runnable examples, and this README. CI still tests those examples against the
+newly built archive using `--replace-dep`; the smoke test uses the local source.
+For an already-published release, run **Update example package pin** manually
+with its version and archive filename. No release is republished by this workflow.
+
+Enable **Settings → Actions → General → Allow GitHub Actions to create and
+approve pull requests**. GitHub may require a maintainer to approve CI runs on
+bot-created PRs. Review and merge these PRs normally; nothing is auto-merged.
+
+Roclet has its own **Update Display package** workflow, which checks daily for a
+new stable release and can be run manually. It downloads and imports the release
+archive and opens a PR in Roclet, without a cross-repository secret. Both workflows
+must be merged into their respective default branches before automation is active.

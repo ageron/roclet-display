@@ -1,4 +1,4 @@
-app [main!] { roclet: "../package/main.roc" }
+app [main!] { roclet: "https://github.com/ageron/roclet-display/releases/download/0.4.0/Gv78dUSQfYRU2yvV9HuS5oHYdMfik84S4sgsej6mbjLd.tar.zst" }
 import roclet.Display
 
 # Rich values retain readable text when run with ordinary Roc.

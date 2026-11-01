@@ -1,0 +1,54 @@
+name: Update example package pin
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Published Display version (for example 0.4.0)'
+        required: true
+        type: string
+      archive:
+        description: 'Published content-addressed archive filename'
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+      archive:
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: update-display-examples
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Update pins and confirm the asset exists
+        env:
+          VERSION: ${{ inputs.version }}
+          ARCHIVE: ${{ inputs.archive }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 tools/update-examples.py --version "$VERSION" --archive "$ARCHIVE"
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$VERSION" | jq -e --arg archive "$ARCHIVE" '.draft == false and any(.assets[]; .name == $archive)'
+      - uses: roc-lang/release-package/actions/create-followup-pr@af2f0cd8662874b825ff3917f4286e793ba18c55
+        with:
+          release_version: ${{ inputs.version }}
+          paths: package-url.txt README.md examples
+          branch_prefix: release/display-examples
+          base_branch: main
+          commit_message: 'Update examples to Display ${{ inputs.version }}'
+          pr_body: 'Pin examples and documentation to the published Display release. Package CI tests examples against the extracted build using --replace-dep.'
+          github_token: ${{ github.token }}

@@ -25,6 +25,7 @@ jobs:
     timeout-minutes: 15
     outputs:
       version: ${{ steps.validate.outputs.release_version }}
+      archive: ${{ steps.archive.outputs.name }}
     steps:
       - uses: actions/checkout@v4
       - uses: roc-lang/setup-roc@f5a74bf90aa694b43ab4a7cbfdb19273bc6aa697
@@ -37,8 +38,12 @@ jobs:
           release_version: ${{ github.event_name == 'workflow_dispatch' && inputs.version || '' }}
           dry_run: ${{ github.event_name != 'workflow_dispatch' }}
           github_token: ${{ github.token }}
+      - name: Test example pin updates
+        run: python3 tests/test-update-examples.py
       - name: Test the extracted release package
         run: python3 tools/test-package.py
+      - id: archive
+        run: echo "name=$(cat dist/archive.txt)" >> "$GITHUB_OUTPUT"
       - name: Collect the tested archive
         run: |
           mkdir -p .release/build
@@ -77,3 +82,14 @@ jobs:
           release_version: ${{ needs.build.outputs.version }}
           github_token: ${{ github.token }}
           target: ${{ github.sha }}
+
+  update-examples:
+    needs: [build, publish]
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: ./.github/workflows/update-examples.yml
+    with:
+      version: ${{ needs.build.outputs.version }}
+      archive: ${{ needs.build.outputs.archive }}

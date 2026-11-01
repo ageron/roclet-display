@@ -37,7 +37,7 @@ def test(roc):
         if 'Chart' not in result or 'hello' not in result:
             raise RuntimeError('Smoke test did not produce expected output')
         for example in sorted((ROOT / 'examples').glob('*.roc')):
-            result = run(roc, '--replace-dep', '../package/main.roc', str(extracted / 'main.roc'), str(example), cwd=example.parent)
+            result = run(roc, '--replace-dep', (ROOT / 'package-url.txt').read_text().strip(), str(extracted / 'main.roc'), str(example), cwd=example.parent)
             if not result.strip():
                 raise RuntimeError(f'Example produced no output: {example.name}')
             print(f'PASS example: {example.name}')
