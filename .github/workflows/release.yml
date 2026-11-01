@@ -1,0 +1,79 @@
+name: Release Display package
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Display package version (for example 0.3.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.event_name == 'workflow_dispatch' && 'display-release' || format('display-check-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
+
+jobs:
+  build:
+    if: github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      version: ${{ steps.validate.outputs.release_version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: roc-lang/setup-roc@f5a74bf90aa694b43ab4a7cbfdb19273bc6aa697
+        with:
+          version: nightly-new-compiler
+          nightly-tag: nightly-2026-10-06-c34079d
+      - id: validate
+        uses: roc-lang/release-package/actions/validate-release@af2f0cd8662874b825ff3917f4286e793ba18c55
+        with:
+          release_version: ${{ github.event_name == 'workflow_dispatch' && inputs.version || '' }}
+          dry_run: ${{ github.event_name != 'workflow_dispatch' }}
+          github_token: ${{ github.token }}
+      - name: Test the extracted release package
+        run: python3 tools/test-package.py
+      - name: Collect the tested archive
+        run: |
+          mkdir -p .release/build
+          cp "dist/$(cat dist/archive.txt)" .release/build/
+      - uses: roc-lang/release-package/actions/prepare-bundles@af2f0cd8662874b825ff3917f4286e793ba18c55
+        with:
+          bundle_glob: .release/build/*.tar.zst
+          test_os_json: '["ubuntu-24.04"]'
+      - name: Write release notes
+        env:
+          RELEASE_VERSION: ${{ steps.validate.outputs.release_version }}
+        run: |
+          archive=$(cat dist/archive.txt)
+          printf '# Roclet Display %s\n\nPackage: https://github.com/%s/releases/download/%s/%s\n\nRich outputs and reactive inputs for Roclet. Import with `import roclet.Display` and `import roclet.Input`.\n' "$RELEASE_VERSION" "$GITHUB_REPOSITORY" "$RELEASE_VERSION" "$archive" > .release/release-notes.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: display-release
+          path: .release/
+          include-hidden-files: true
+          if-no-files-found: error
+  publish:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: display-release
+          path: .release
+      - uses: roc-lang/release-package/actions/publish-release@af2f0cd8662874b825ff3917f4286e793ba18c55
+        with:
+          release_version: ${{ needs.build.outputs.version }}
+          github_token: ${{ github.token }}
+          target: ${{ github.sha }}
